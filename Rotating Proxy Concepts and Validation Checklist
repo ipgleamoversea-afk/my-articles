@@ -1,0 +1,83 @@
+This reference explains the distinction between a proxy endpoint, an exit IP, and application state. It contains no provider-specific executable configuration.
+
+
+## Connection model
+
+```text
+Client -> Proxy endpoint -> Exit IP -> Destination
+```
+
+- **Client:** the application making the request.
+- **Endpoint:** the proxy address and port configured by the application.
+- **Exit IP:** the public address observed by the destination connection.
+
+A stable endpoint can route through changing exits. Generating another endpoint does not establish a particular rotation guarantee.
+
+## Rotation and continuity
+
+Evaluate rotating exits for independent requests. Evaluate a sticky session when related requests benefit from an unchanged exit during the sequence.
+
+A sticky session is subject to configuration and exit availability. It is not a guarantee of a permanent address, and it does not manage cookies, browser storage, or other application state.
+
+## Pilot checklist
+
+- [ ] Confirm the provider's supported connection method and authentication.
+- [ ] Observe the exit IP and expected location.
+- [ ] Check behavior across multiple requests.
+- [ ] Preserve the client state required for related pages.
+- [ ] Verify that the returned page contains the expected market and content.
+- [ ] Validate extracted fields rather than checking response status alone.
+- [ ] Record errors, retries, elapsed time, and traffic under the test conditions.
+
+## Suggested observation fields
+
+```text
+observed_at
+requested_market
+observed_exit_ip
+response_status
+expected_content_present
+required_fields_valid
+retry_count
+traffic_observed
+notes
+```
+
+These names describe a proposed observation log, not fields provided by an Gleam API. Avoid storing proxy credentials or other secrets in a public repository.
+
+## Review a sample record
+
+A reviewer should be able to answer these questions without reading the entire collection log:
+
+| Check          | Example of a useful observation                    |
+| -------------- | -------------------------------------------------- |
+| Item identity  | Exact model and variant recorded                   |
+| Market context | Requested market and returned currency recorded    |
+| Availability   | Explicitly available, unavailable, or unknown      |
+| Validity       | Required fields present, or a reason for rejection |
+| Traceability   | Collection time and page reference recorded        |
+
+These are documentation examples, not a report of an executed test.
+
+## Classify failures
+
+Use categories that suggest a next investigation:
+
+- Connection or authentication failure: inspect the client configuration and documented access method.
+- Unexpected destination response: inspect the actual response before retrying.
+- Required field missing: review page content and extraction logic.
+- Product mismatch: review identification and matching rules.
+
+Do not silently convert a failed observation into an unavailable product or reuse an earlier price without recording its age.
+
+## Keep the repository reproducible
+
+If a tested example is added later, include its dependency versions, configuration instructions, expected output shape, and known limitations. Supply a template for secrets rather than credentials, and document the conditions under which the example was tested.
+
+The current reference includes no executable integration and makes no claim about supported provider-specific protocol parameters.
+
+## Gleam product note
+
+The supplied product brief describes generated proxy endpoints, location and session settings, and an IP allowlist option. It does not describe an API-based proxy-list extraction mode.
+
+Confirm current configuration details in the product interface before adding an executable example to this repository.
